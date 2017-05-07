@@ -19,6 +19,7 @@ class DigitalDecoder
     void handlePayload(uint64_t payload);
     void handleBit(bool value);
     void decodeBit(bool value);
+    void dumpStateMap(uint32_t serial);
 
     unsigned int samplesSinceEdge = 0;
     bool lastSample = false;
@@ -26,15 +27,15 @@ class DigitalDecoder
     struct deviceState_t
     {
         uint64_t lastUpdateTime;
-        uint64_t lastAlarmTime;
-        
         uint8_t lastRawState;
-        
-        bool tamper;
-        bool alarm;
+       
+	bool loop1;
+	bool loop2;
+	bool loop3;
+	bool loop4; 
+
+	bool supervision;
         bool batteryLow;
-        
-        bool isMotionDetector;
     };
 
     std::map<uint32_t, deviceState_t> deviceStateMap;

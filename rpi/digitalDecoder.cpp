@@ -1,9 +1,11 @@
 #include "digitalDecoder.h"
+#include "config.h"
 
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <ctime>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -16,7 +18,7 @@
 void DigitalDecoder::writeDeviceState()
 {
     std::ofstream file;
-    file.open("/var/www/html/deviceState.json");
+    file.open(C_STATE_FILE);
     
     if(!file.is_open())
     {
@@ -34,12 +36,14 @@ void DigitalDecoder::writeDeviceState()
         
         file << "{" << std::endl;
         file << "    \"serial\": " << dd.first << "," << std::endl;
-        file << "    \"isMotion\": " << (dd.second.isMotionDetector ? "true," : "false,") << std::endl;
-        file << "    \"tamper\": " << (dd.second.tamper ? "true," : "false,") << std::endl;
-        file << "    \"alarm\": " << (dd.second.alarm ? "true," : "false,") << std::endl;
+        file << "    \"loop1\": " << (dd.second.loop1 ? "true," : "false,") << std::endl;
+        file << "    \"loop2\": " << (dd.second.loop2 ? "true," : "false,") << std::endl;
+        file << "    \"loop3\": " << (dd.second.loop3 ? "true," : "false,") << std::endl;
+        file << "    \"loop4\": " << (dd.second.loop4 ? "true," : "false,") << std::endl;
         file << "    \"batteryLow\": " << (dd.second.batteryLow ? "true," : "false,") << std::endl;
-        file << "    \"lastUpdateTime\": " << dd.second.lastUpdateTime << "," << std::endl;
-        file << "    \"lastAlarmTime\": " << dd.second.lastAlarmTime << std::endl;
+        file << "    \"supervision\": " << (dd.second.supervision ? "true," : "false,") << std::endl;
+        file << "    \"lastUpdateTime\": " << dd.second.lastUpdateTime << std::endl;
+        //file << "    \"lastUpdateTime\": " << dd.second.lastUpdateTime << "," << std::endl;
         file << "}";
     }
     
@@ -48,53 +52,59 @@ void DigitalDecoder::writeDeviceState()
     file.close();
 }
 
-#warning "Update the SmartThings endpoint here"
+//#warning "Update the SmartThings endpoint here"
 void DigitalDecoder::sendDeviceState()
 {
-    printf("Sending Device State\n");
-    system("curl -H 'Authorization: Bearer 12345678-1234-1234-1234-1234567890ab' -H 'Content-Type: application/json' -X PUT -d '@/var/www/html/deviceState.json' https://graph.api.smartthings.com:443/api/smartapps/installations/12345678-1234-1234-1234-1234567890ab/event&");
+
+#ifdef DEBUG
+    printf("\n*** Sending Device State ***\n");
+#endif
+
+    if (C_UPDATE_CMD != "")
+    {
+        system(C_UPDATE_CMD);
+    }
 }
 
 void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 {
     deviceState_t ds;
-    
+    bool forceUpdate = false;
+
     // Extract prior info
     if(deviceStateMap.count(serial))
     {
         ds = deviceStateMap[serial];
     }
-    else
-    {
-        ds.isMotionDetector = false;
-    }
-    
-    // Watch for anything that indicates this sensor is a motion detector
-    if(state < 0x80) ds.isMotionDetector = true;
-    
-    // Decode motion/open bits
-    if(ds.isMotionDetector)
-    {
-        ds.alarm = (state & 0x80);
-    }
-    else
-    {
-        ds.alarm = (state & 0x20);
-    }
-    
-    // Decode tamper bit
-    ds.tamper = (state & 0x40);
-    
-    // Decode battery low bit    
-    ds.batteryLow = (state & 0x08);
-    
+
+    // Decode bits
+    ds.loop1 = (state & 0x80);
+    ds.loop2 = (state & 0x20);
+    ds.loop3 = (state & 0x10);
+    ds.loop4 = (state & 0x40);
+    ds.batteryLow = (state & 0x02);
+    ds.supervision = (state & 0x04);
+
     // Timestamp
     timeval now;
     gettimeofday(&now, nullptr);
+
+    // Some devices, such as keyfobs, do not send a reset, so it
+    // is best to consider elapsed time as well as state change
+    if ((now.tv_sec - ds.lastUpdateTime) > C_REPEAT_TIME)
+    {
+        forceUpdate = true;
+#ifdef DEBUG
+	printf("repeat time elapsed, forcing update\n");
+#endif
+    }
+
+    //std::cout << "lastUpdateTime " << ds.lastUpdateTime << std::endl;
+    //std::cout << "now            " << now.tv_sec << std::endl;
+
+    // Update
     ds.lastUpdateTime = now.tv_sec;
     
-    if(ds.alarm) ds.lastAlarmTime = now.tv_sec;
-
     // Put the answer back in the map
     deviceStateMap[serial] = ds;
     
@@ -102,17 +112,54 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     writeDeviceState();
     
     // Send the notification if something changed
-    if(state != ds.lastRawState)
+    if(state != ds.lastRawState || forceUpdate == true)
     {
         sendDeviceState();
+#ifdef SHOW
+        dumpStateMap(serial);
+#endif
     }
+
+    // Update raw state
     deviceStateMap[serial].lastRawState = state;
-    
+
+#ifdef DEBUG
+    dumpStateMap(serial);
+#endif
+
+}
+
+void DigitalDecoder::dumpStateMap(uint32_t serial)
+{
+    time_t rawtime;
+    struct tm * timeinfo;
+    char s[128];
+    int count = 0;
+
+    // Obtain and output current date and time
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    strftime(s,sizeof(s),C_DATETIME_FORMAT,timeinfo);
+    printf("%s\n",s);
+ 
     for(const auto &dd : deviceStateMap)
     {
-        printf("%sDevice %7u: %s\n",dd.first==serial ? "*" : " ", dd.first, dd.second.alarm ? "ALARM" : "OK");
+        count++;
+
+        printf("%sDevice %07u: %s%s%s%s%s%s\n",
+	       dd.first==serial ? "*" : " ", dd.first,
+               dd.second.loop1 ? "L1 " : "",
+               dd.second.loop2 ? "L2 " : "",
+               dd.second.loop3 ? "L3 " : "",
+               dd.second.loop4 ? "L4 " : "",
+               dd.second.supervision ? "SUP " : "",
+               dd.second.batteryLow ? "BATT" : ""
+	); 
     }
+    printf("Total devices: %d\n",count);
     printf("\n");
+    fflush(stdout);
+
 }
 
 void DigitalDecoder::handlePayload(uint64_t payload)
@@ -156,18 +203,23 @@ void DigitalDecoder::handlePayload(uint64_t payload)
     //
     // Print Packet
     //
-// #ifdef __arm__
-//     if(valid)    
-//         printf("Valid Payload: %llX (Serial %llu, Status %llX)\n", payload, ser, typ);
-//     else
-//         printf("Invalid Payload: %llX\n", payload);
-// #else    
-//     if(valid)    
-//         printf("Valid Payload: %lX (Serial %lu, Status %lX)\n", payload, ser, typ);
-//     else
-//         printf("Invalid Payload: %lX\n", payload);
-// #endif
-    
+
+#ifdef DEBUG
+#ifdef __arm__
+    if(valid)    
+        printf("Valid Payload: %llX (Serial %llu, Status %llX)\n", payload, ser, typ);
+    else
+        printf("Invalid Payload: %llX\n", payload);
+#else    
+    if(valid)    
+        printf("Valid Payload: %lX (Serial %lu, Status %lX)\n", payload, ser, typ);
+    else
+        printf("Invalid Payload: %lX\n", payload);
+
+    fflush(stdout);
+#endif
+#endif   
+ 
     static uint32_t packetCount = 0;
     static uint32_t errorCount = 0;
     
@@ -175,7 +227,9 @@ void DigitalDecoder::handlePayload(uint64_t payload)
     if(!valid)
     {
         errorCount++;
+#ifdef DEBUG
         printf("%u/%u packets failed CRC\n", errorCount, packetCount);
+#endif
     }
 }
 

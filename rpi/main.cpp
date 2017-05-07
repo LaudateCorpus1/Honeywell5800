@@ -1,5 +1,6 @@
 #include "digitalDecoder.h"
 #include "analogDecoder.h"
+#include "config.h"
 
 #include <rtl-sdr.h>
 
@@ -68,6 +69,8 @@ int main()
     }
     
     std::cout << "Successfully set the sample rate to " << rtlsdr_get_sample_rate(dev) << std::endl;
+
+    std::cout << std::endl;
     
     //
     // Prepare for streaming
