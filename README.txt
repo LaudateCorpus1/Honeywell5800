@@ -1,4 +1,14 @@
-This code builds on excellent work by jhaines0 to receive and decode signals from Honeywell 5800-series wireless sensors using an inexpensive software defined receiver. It is being developed and tested on a Raspberry Pi3 running Rasbian, but should work on any Linux-based system with the appropriate libraries.
+This code builds on excellent work by jhaines0 to receive and decode signals from Honeywell 5800-series wireless sensors using an inexpensive software defined receiver.
+
+It is being developed and tested on a Raspberry Pi3 running Rasbian with a NooElec NESDR SMArt RTL-SDR, but should work on any Linux-based system with a compatible RTL-SDR and appropriate libraries.
+
+The intent is to receive signals and forward events to another application.
+
+*****
+WARNING:
+This software and information accompanying it is intended for educational and experimental purposes only.
+Under no circumstances should it be relied upon for protection of persons or property.
+*****
 
 Background
 
@@ -34,4 +44,4 @@ The 5281 Temp and Flood sensor usually uses loop 1 for cold (ie. pipes will free
 
 The 5817XT supports a programmable NO or NC wired on loop 1, reed switch on loop 2, and wired NC on loop 3. For life safety applications, or those who like to tinker, loop 1 can be configured to transmit an alert every 4 seconds until the loop is restored. Loop 4 is tamper.
 
-The 5834-4 four-button remote reports each button as a different loop, and combinations of buttons as a second set of four loops with the serial number incremented by 1. Note that the "*" button (lower right) is loop 1, and they rotate counterclockwise. (A neighbour's keyfob may be brutal if you make loop assumptions and act on unrecognized devices.)
+The 5834-4 four-button remote reports each button as a different loop, and combinations of buttons as a second set of four loops with the serial number incremented by 1. Note that the "*" button (lower right) is loop 1, and they rotate counterclockwise.
