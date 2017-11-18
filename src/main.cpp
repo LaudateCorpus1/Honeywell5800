@@ -19,7 +19,7 @@ int main()
     //
     if(rtlsdr_get_device_count() < 1)
     {
-        std::cout << "Could not find any devices" << std::endl;
+        std::cerr << "Could not find any devices" << std::endl;
         return -1;
     }
         
@@ -27,7 +27,7 @@ int main()
         
     if(rtlsdr_open(&dev, 0) < 0)
     {
-        std::cout << "Failed to open device" << std::endl;
+        std::cerr << "Failed to open device" << std::endl;
         return -1;
     }
     
@@ -36,41 +36,41 @@ int main()
     //
     if(rtlsdr_set_center_freq(dev, 345000000) < 0)
     {
-        std::cout << "Failed to set frequency" << std::endl;
+        std::cerr << "Failed to set frequency" << std::endl;
         return -1;
     }
     
-    std::cout << "Successfully set the frequency to " << rtlsdr_get_center_freq(dev) << std::endl;
+    std::cerr << "Successfully set the frequency to " << rtlsdr_get_center_freq(dev) << std::endl;
     
     //
     // Set the gain
     //
     if(rtlsdr_set_tuner_gain_mode(dev, 1) < 0)
     {
-        std::cout << "Failed to set gain mode" << std::endl;
+        std::cerr << "Failed to set gain mode" << std::endl;
         return -1;
     }
     
     if(rtlsdr_set_tuner_gain(dev, 350) < 0)
     {
-        std::cout << "Failed to set gain" << std::endl;
+        std::cerr << "Failed to set gain" << std::endl;
         return -1;
     }
     
-    std::cout << "Successfully set gain to " << rtlsdr_get_tuner_gain(dev) << std::endl;
+    std::cerr << "Successfully set gain to " << rtlsdr_get_tuner_gain(dev) << std::endl;
     
     //
     // Set the sample rate
     //
     if(rtlsdr_set_sample_rate(dev, 1000000) < 0)
     {
-        std::cout << "Failed to set sample rate" << std::endl;
+        std::cerr << "Failed to set sample rate" << std::endl;
         return -1;
     }
     
-    std::cout << "Successfully set the sample rate to " << rtlsdr_get_sample_rate(dev) << std::endl;
+    std::cerr << "Successfully set the sample rate to " << rtlsdr_get_sample_rate(dev) << std::endl;
 
-    std::cout << std::endl;
+    std::cerr << std::endl;
     
     //
     // Prepare for streaming
