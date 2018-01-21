@@ -30,7 +30,7 @@ Most of the wireless motion detectors report on loop 1, but some use loop 2 for 
 
 Smoke detectors, such as the 5808, report on loop 1. The 5808W3 uses loop 2 for a maintenance warning, loop 3 for low temp, and loop 4 for tamper.
 
-The 5853 glassbreak reports on loop 1. I believe tamper is loop 4, but haven't confirmed it.
+The 5853 glassbreak reports on loop 1 and tamper is loop 4.
 
 The very common 5816 window/door sensor reports the wired NC loop (there are screw contacts inside the case) as loop 1, the magnetic contact as loop 2, and the built-in tamper switch as loop 4. Most installers just ignore the wired loop and don't program it on the panel, so you'll see it report loop 1 and 2 when the door/window opens, and just loop 1 when it closes. However, it's also common to use loop 1 for retrofit/takeovers or a concealed switch.
 
