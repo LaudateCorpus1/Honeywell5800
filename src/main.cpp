@@ -97,6 +97,7 @@ int main()
     
     aDecoder.setCallback([&](char data){dDecoder.handleData(data);});
     
+    /*
     //
     // Async Receive
     //
@@ -117,8 +118,8 @@ int main()
     
     const int err = rtlsdr_read_async(dev, cb, &aDecoder, 0, 0);
     std::cout << "Read Async returned " << err << std::endl;
+    */
     
-/*    
     //
     // Synchronous Receive
     //
@@ -141,7 +142,7 @@ int main()
             aDecoder.handleMagnitude(mag);
         }
     }
-*/    
+    
     //
     // Shut down
     //
