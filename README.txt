@@ -4,11 +4,11 @@ It is being developed and tested on a Raspberry Pi3 running Rasbian with a NooEl
 
 The intent is to receive signals and forward events to another application.
 
-*****
+**********************************************************************************************************
 WARNING:
 This software and information accompanying it is intended for educational and experimental purposes only.
 Under no circumstances should it be relied upon for protection of persons or property.
-*****
+**********************************************************************************************************
 
 Background
 
