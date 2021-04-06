@@ -13,8 +13,9 @@ class DigitalDecoder
     
   private:
   
-    void writeDeviceState();
+    void writeAllDeviceState();
     void sendDeviceState();
+    void printDeviceState(uint32_t serial);
     void updateDeviceState(uint32_t serial, uint8_t state);
     void handlePayload(uint64_t payload);
     void handleBit(bool value);

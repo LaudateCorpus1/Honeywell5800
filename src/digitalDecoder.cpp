@@ -15,7 +15,7 @@
 #define SYNC_PATTERN 0xFFFE000000000000ul
 
 
-void DigitalDecoder::writeDeviceState()
+void DigitalDecoder::writeAllDeviceState()
 {
     std::ofstream file;
     file.open(C_STATE_FILE);
@@ -66,6 +66,31 @@ void DigitalDecoder::sendDeviceState()
     }
 }
 
+void DigitalDecoder::printDeviceState(uint32_t serial)
+{
+    deviceState_t ds;
+
+    if(deviceStateMap.count(serial))
+    {
+        ds = deviceStateMap[serial];
+    }
+    else
+    {
+        return;
+    }
+
+    std::cout << "{";
+    std::cout << "\"serial\": " << serial << ",";
+    std::cout << "\"loop1\": " << (ds.loop1 ? "true," : "false,");
+    std::cout << "\"loop2\": " << (ds.loop2 ? "true," : "false,");
+    std::cout << "\"loop3\": " << (ds.loop3 ? "true," : "false,");
+    std::cout << "\"loop4\": " << (ds.loop4 ? "true," : "false,");
+    std::cout << "\"batteryLow\": " << (ds.batteryLow ? "true," : "false,");
+    std::cout << "\"supervision\": " << (ds.supervision ? "true," : "false,");
+    std::cout << "\"lastUpdateTime\": " << ds.lastUpdateTime;
+    std::cout << "}" << std::endl;
+}
+
 void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
 {
     deviceState_t ds;
@@ -109,12 +134,13 @@ void DigitalDecoder::updateDeviceState(uint32_t serial, uint8_t state)
     deviceStateMap[serial] = ds;
     
     // Record the current state
-    writeDeviceState();
+    writeAllDeviceState();
     
     // Send the notification if something changed
     if(state != ds.lastRawState || forceUpdate == true)
     {
         sendDeviceState();
+        printDeviceState(serial);
 #ifdef SHOW
         dumpStateMap(serial);
 #endif
