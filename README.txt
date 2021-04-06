@@ -4,11 +4,10 @@ It is being developed and tested on a Raspberry Pi3 running Rasbian with a NooEl
 
 The intent is to receive signals and forward events to another application.
 
-**********************************************************************************************************
-WARNING:
-This software and information accompanying it is intended for educational and experimental purposes only.
+******************************************************************************************************************
+WARNING: This software and information accompanying it is intended for educational and experimental purposes only.
 Under no circumstances should it be relied upon for protection of persons or property.
-**********************************************************************************************************
+******************************************************************************************************************
 
 Background
 
@@ -16,7 +15,7 @@ The Honeywell 5800 series transmit a serial number and the status of up to 4 loo
 
 By design, the alarm panel ignores all unknown serial numbers as well as loops that are not programmed. There is one exception: the panel assumes loop 4 as tamper for some device types.
 
-In terms of the status byte,
+The status byte bitmap is as follows:
 
 Loop 1 - 0x80
 Loop 2 - 0x20
